@@ -1,3 +1,26 @@
+# ---
+
+# name: Checks
+
+# on: [push]
+
+# jobs:
+#   test-lint:
+#     name: Test and Lint
+#     runs-on: ubuntu-20.04
+#     steps:
+#       - name: Login to Docker Hub
+#         uses: docker/login-action@v2
+#         with:
+#           username: ${{ secrets.DOCKERHUB_USER }}
+#           password: ${{ secrets.DOCKERHUB_TOKEN }}
+#       - name: Checkout
+#         uses: actions/checkout@v3
+#       - name: Test
+#         run: docker-compose run --rm app sh -c "python manage.py test"
+#       - name: Lint
+#         run: docker-compose run --rm app sh -c "flake8"
+
 ---
 
 name: Checks
@@ -9,14 +32,23 @@ jobs:
     name: Test and Lint
     runs-on: ubuntu-20.04
     steps:
+      - name: Install docker-compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/2.1.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+
       - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
       - name: Test
         run: docker-compose run --rm app sh -c "python manage.py test"
+
       - name: Lint
         run: docker-compose run --rm app sh -c "flake8"
