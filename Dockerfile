@@ -56,6 +56,13 @@ RUN adduser --disabled-password --no-create-home django-user && \
     mkdir -p /home/django-user && \
     chown -R django-user:django-user /home/django-user /py /app
 
+# Install system dependencies including Git
+RUN apt-get update && \
+    apt-get install -y \
+    git \
+    && apt-get clean
+
+
 # Set the path to the virtual environment
 ENV PATH="/py/bin:$PATH"
 
