@@ -8,6 +8,7 @@ services:
       - "8000:8000" # Expose container port 8000 to the host's port 8000
     volumes:
       - ./app:/app # Bind mount the app directory for live code updates
+      - dev-static-data:/vol/web
     command: >
       sh -c "python manage.py wait_for_db &&
              python manage.py migrate &&
@@ -33,3 +34,4 @@ services:
 
 volumes:
   dev_db_data:
+  dev-static-data:

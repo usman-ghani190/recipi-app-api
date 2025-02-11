@@ -2,7 +2,7 @@
 FROM python:3.9-slim-buster
 LABEL maintainer="ghani5511"
 
-# Set the Python environment to unbuffered to avoid buffering issues with logs
+# Set environment variables to prevent buffering issues and disable VS Code Server inside the container
 ENV PYTHONUNBUFFERED=1
 ENV DOCKER_VS_CODE_SERVER=false
 
@@ -10,12 +10,15 @@ ENV DOCKER_VS_CODE_SERVER=false
 RUN apt-get update && \
     apt-get install -y \
     postgresql-client \
+    libjpeg-dev \
+    zlib1g-dev \
     libpq-dev \
     build-essential \
     python3-pip \
+    git \
     && apt-get clean
 
-# Ensure /tmp exists with proper permissions (world-writable)
+# Ensure /tmp exists with proper permissions
 RUN mkdir -p /tmp && chmod 1777 /tmp
 
 # Copy the requirements files into the container
@@ -25,7 +28,7 @@ COPY requirements.dev.txt /tmp/requirements.dev.txt
 # Create a virtual environment
 RUN python3 -m venv /py
 
-# Ensure pip is installed in the virtual environment
+# Ensure pip is installed and upgraded inside the virtual environment
 RUN /py/bin/python -m ensurepip --upgrade && \
     /py/bin/pip install --upgrade pip
 
@@ -34,9 +37,7 @@ RUN /py/bin/pip install --no-cache-dir -r /tmp/requirements.txt
 
 # If the DEV argument is passed, install the development dependencies as well
 ARG DEV=false
-RUN if [ "$DEV" = "true" ]; \
-    then /py/bin/pip install --no-cache-dir -r /tmp/requirements.dev.txt; \
-    fi
+RUN if [ "$DEV" = "true" ]; then /py/bin/pip install --no-cache-dir -r /tmp/requirements.dev.txt; fi
 
 # Copy the application code into the container
 COPY ./app /app
@@ -44,24 +45,22 @@ COPY ./app /app
 # Set the working directory inside the container
 WORKDIR /app
 
-# Remove the temporary requirements files
-RUN rm -rf /tmp
+# Remove only the contents of /tmp instead of the entire directory
+RUN rm -rf /tmp/*
 
-# Clean up unnecessary build dependencies (Ensure /tmp is writable before this step)
-RUN mkdir -p /tmp && chmod 1777 /tmp && \
-    apt-get remove --purge -y build-essential libpq-dev && apt-get clean
+# Clean up unnecessary build dependencies (after ensuring /tmp is intact)
+RUN apt-get remove --purge -y build-essential libpq-dev && apt-get clean
 
 # Create a non-root user to run the app
 RUN adduser --disabled-password --no-create-home django-user && \
     mkdir -p /home/django-user && \
     chown -R django-user:django-user /home/django-user /py /app
 
-# Install system dependencies including Git
-RUN apt-get update && \
-    apt-get install -y \
-    git \
-    && apt-get clean
-
+# Create necessary directories for static and media files
+RUN mkdir -p /vol/web/media && \
+    mkdir -p /vol/web/static && \
+    chown -R django-user:django-user /vol && \
+    chmod -R 755 /vol
 
 # Set the path to the virtual environment
 ENV PATH="/py/bin:$PATH"
