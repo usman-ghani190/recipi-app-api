@@ -16,6 +16,7 @@ RUN apt-get update && \
     build-essential \
     python3-pip \
     git \
+    linux-headers-amd64 \
     && apt-get clean
 
 # Ensure /tmp exists with proper permissions
@@ -24,6 +25,7 @@ RUN mkdir -p /tmp && chmod 1777 /tmp
 # Copy the requirements files into the container
 COPY requirements.txt /tmp/requirements.txt
 COPY requirements.dev.txt /tmp/requirements.dev.txt
+COPY ./scripts /scripts
 
 # Create a virtual environment
 RUN python3 -m venv /py
@@ -60,10 +62,11 @@ RUN adduser --disabled-password --no-create-home django-user && \
 RUN mkdir -p /vol/web/media && \
     mkdir -p /vol/web/static && \
     chown -R django-user:django-user /vol && \
-    chmod -R 755 /vol
+    chmod -R 755 /vol && \
+    chmod -R +x /scripts
 
 # Set the path to the virtual environment
-ENV PATH="/py/bin:$PATH"
+ENV PATH="/scripts:/py/bin:$PATH"
 
 # Switch to the non-root user
 USER django-user
@@ -72,4 +75,4 @@ USER django-user
 EXPOSE 8000
 
 # Start the Django development server
-CMD ["/py/bin/python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["/py/bin/python", "manage.py", "runserver", "0.0.0.0:8000", "run.sh"]
