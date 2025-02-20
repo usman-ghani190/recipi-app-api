@@ -1,5 +1,5 @@
 FROM nginxinc/nginx-unprivileged:1-alpine
-LABEL maintainer="ghani5511"
+LABEL maintainer="londonappdeveloper.com"
 
 COPY ./default.conf.tpl /etc/nginx/default.conf.tpl
 COPY ./uwsgi_params /etc/nginx/uwsgi_params
@@ -13,11 +13,12 @@ USER root
 
 RUN mkdir -p /vol/static && \
     chmod 755 /vol/static && \
-    chown nginx:nginx /etc/nginx/conf.d && \
+    touch /etc/nginx/conf.d/default.conf && \
+    chown nginx:nginx /etc/nginx/conf.d/default.conf && \
     chmod +x /run.sh
 
 VOLUME /vol/static
 
 USER nginx
 
-ENTRYPOINT [ "/run.sh" ]
+CMD ["/run.sh"]

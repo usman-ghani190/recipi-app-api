@@ -5,9 +5,9 @@ services:
       args:
         - DEV=true
     ports:
-      - "8000:8000" # Expose container port 8000 to the host's port 8000
+      - "8000:8000"
     volumes:
-      - ./app:/app # Bind mount the app directory for live code updates
+      - ./app:/app
       - dev-static-data:/vol/web
     command: >
       sh -c "python manage.py wait_for_db &&
@@ -18,20 +18,19 @@ services:
       - DB_NAME=devdb
       - DB_USER=devuser
       - DB_PASS=changeme
+      - DEBUG=1
     depends_on:
-      - db # Ensure the app waits for the database to be ready
-    restart: always # Automatically restart the container if it crashes
+      - db
 
   db:
     image: postgres:14-alpine
     volumes:
-      - dev_db_data:/var/lib/postgresql/data # Persist database data
+      - dev-db-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=devdb
       - POSTGRES_USER=devuser
       - POSTGRES_PASSWORD=changeme
-    restart: always # Automatically restart the database container if it crashes
 
 volumes:
-  dev_db_data:
+  dev-db-data:
   dev-static-data:
